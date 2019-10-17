@@ -1,17 +1,22 @@
 <!-- Code from d3-graph-gallery.com -->
 <!DOCTYPE html>
-<meta charset="utf-8">
-
-<!-- Load d3.js & color scale-->
-<script src="https://d3js.org/d3.v4.js"></script>
-<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
-
-<!-- Create a div where the graph will take place -->
+<head>
+  <meta charset="utf-8">
+  <!-- Load d3.js & color scale-->
+  <script src="https://d3js.org/d3.v4.js"></script>
+  <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+  <style type="text/css">* { font-family: "Helvetica" }</style>
+</head>
+<body>
+  <h2>Seattle Public Schools Highly Capable Cohort (HCC) Size By Year</h2>
+  <p>Each stripe in this chart represents one graduating class, you can hover over it for details./p>
 <div id="my_dataviz"></div>
-
-<pre id="text"></pre>
-<pre id="raw"></pre>
-
+<!-- pre id="text"></pre -->
+<!-- pre id="raw"></pre -->
+<p>
+This data is derived from SPS public reports and is
+<a href="https://gist.githubusercontent.com/femto113/df72f17f8954b2757b7631a3ca31d32c/">available in CSV form here</a>.
+</p>
 <script>
 
 // set the dimensions and margins of the graph
@@ -40,6 +45,8 @@ d3.text(data_url, function(text) {
 
   // List of groups = header of the csv files
   var keys = data.columns.slice(1)
+  // List of years
+  var years = data.map(y => y.year);
 
   // Add X axis
   var x = d3.scaleLinear()
@@ -47,7 +54,7 @@ d3.text(data_url, function(text) {
     .range([ 0, width ]);
   svg.append("g")
     .attr("transform", "translate(0," + height*0.8 + ")")
-    .call(d3.axisBottom(x).tickSize(-height*.7).tickValues([2006, 2008, 2010, 2012, 2014, 2016, 2018]))
+    .call(d3.axisBottom(x).tickSize(-height*.7).ticks(2018 - 2006).tickFormat(d3.format("d")))
     .select(".domain").remove()
   // Customization
   svg.selectAll(".tick line").attr("stroke", "#b8b8b8")
@@ -91,9 +98,26 @@ d3.text(data_url, function(text) {
       .style("stroke", "black")
       .style("opacity", 1)
   }
-  var mousemove = function(d,i) {
-    grp = keys[i]
-    Tooltip.text(grp)
+
+  // find the data slice that corresponds to a mouse x coordinate
+  const bisect = d3.bisector(d => d.year).left;
+  function locate_data(mx) {
+    const year = x.invert(mx);
+    const index = bisect(data, year, 1);
+    const a = data[index - 1];
+    const b = data[index];
+    return year - a.year > b.year - year ? b : a;
+  }
+
+  var mousemove = function(series_data, series_index) {
+    var year_data = locate_data(d3.mouse(this)[0]);
+    var class_name = keys[series_index];
+    var class_year = parseInt(class_name.slice("Class of ".length));
+    var students = year_data[class_name];
+    var grade = 12 + year_data.year - class_year;
+    var tip = "In " + year_data.year + " the " + class_name + " had " + students + " students";
+    if (grade >= 1 && grade <= 12) tip +=  " in grade " + grade;
+    Tooltip.text(tip);
   }
   var mouseleave = function(d) {
     Tooltip.style("opacity", 0)
@@ -121,3 +145,5 @@ d3.text(data_url, function(text) {
 
 })
 </script>
+</body>
+</html>
