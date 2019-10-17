@@ -53,23 +53,19 @@ d3.text(data_url, function(text) {
     .domain(d3.extent(data, function(d) { return d.year; }))
     .range([ 0, width ]);
   svg.append("g")
-    .attr("transform", "translate(0," + height*0.8 + ")")
-    .call(d3.axisBottom(x).tickSize(-height*.7).ticks(2018 - 2006).tickFormat(d3.format("d")))
+    .attr("transform", "translate(0," + height*.8 + ")")
+    .call(d3.axisBottom(x).tickSize(-height*.8).ticks(2018 - 2006).tickFormat(d3.format("d")))
     .select(".domain").remove()
   // Customization
   svg.selectAll(".tick line").attr("stroke", "#b8b8b8")
 
-  // Add X axis label:
-  svg.append("text")
-      .attr("text-anchor", "end")
-      .attr("x", width)
-      .attr("y", height-30 )
-      .text("Time (year)");
-
   // Add Y axis
   var y = d3.scaleLinear()
-    .domain([-3000, 3000])
-    .range([ height, 0 ]);
+    .domain([0, 4000])
+    .range([ height * .8, 40 ]);
+  svg.append("g")
+    .call(d3.axisRight(y).ticks(10).tickFormat(d3.format("d")))
+    .select(".domain").remove();
 
   // color palette
   var color = d3.scaleOrdinal()
@@ -78,7 +74,7 @@ d3.text(data_url, function(text) {
 
   //stack the data?
   var stackedData = d3.stack()
-    .offset(d3.stackOffsetSilhouette)
+    // .offset(d3.stackOffsetSilhouette)
     .keys(keys)
     (data)
 
